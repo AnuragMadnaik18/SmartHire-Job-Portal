@@ -1,5 +1,12 @@
 package com.smarthire.entity;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smarthire.enums.AccountStatus;
 import com.smarthire.enums.Role;
@@ -23,7 +30,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class User extends BaseEntity {
+public class User extends BaseEntity implements UserDetails {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,5 +56,31 @@ public class User extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name="account_status",nullable = false)
 	private AccountStatus accountStatus; // ACTIVE / BLOCKED / DEACTIVATED
+	
+	// 🔐 REQUIRED FOR SPRING SECURITY
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    public String getUsername() {
+        return email;
+    }
+
+    public boolean isAccountNonExpired() {
+        return accountStatus == AccountStatus.ACTIVE;
+    }
+
+    public boolean isAccountNonLocked() {
+        return accountStatus == AccountStatus.ACTIVE;
+    }
+
+    public boolean isCredentialsNonExpired() {
+        return accountStatus == AccountStatus.ACTIVE;
+    }
+
+    public boolean isEnabled() {
+        return accountStatus == AccountStatus.ACTIVE;
+    }
 }
 
