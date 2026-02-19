@@ -1,8 +1,13 @@
-HELP.md
+### Maven ###
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.log
+
+### IDE Files ###
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
 
 ### STS ###
 .apt_generated
@@ -13,12 +18,6 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -26,15 +25,11 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+### OS Files ###
+.DS_Store
+Thumbs.db
 
-/target
-/.idea
-*.iml
-*.log
-application.properties
-
+### Optional: ignore local secret config ###
+# application-local.properties
+# application-secret.properties
