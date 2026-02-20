@@ -24,3 +24,16 @@ dist-ssr
 *.sw?
 
 .env
+
+# Maven
+/target/
+
+# Eclipse / STS
+.metadata/
+bin/
+.project
+.classpath
+.settings/
+
+# Node
+node_modules/
