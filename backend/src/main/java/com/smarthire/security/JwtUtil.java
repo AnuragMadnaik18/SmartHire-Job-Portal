@@ -5,12 +5,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -35,6 +37,9 @@ public class JwtUtil {
     public void init() {
         jwtKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
+    
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     public String createToken(Authentication auth) {
         UserDetails user = (UserDetails) auth.getPrincipal();
@@ -43,6 +48,7 @@ public class JwtUtil {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
+        
 
         return Jwts.builder()
                 .setSubject(user.getUsername()) // email
@@ -64,11 +70,15 @@ public class JwtUtil {
                 .getBody();
 
         String email = claims.getSubject();
-        String roles = (String) claims.get("role");
+        
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        System.out.println(userDetails.getAuthorities());
 
-        List<GrantedAuthority> authorities =
-                AuthorityUtils.commaSeparatedStringToAuthorityList(roles);
-
-        return new UsernamePasswordAuthenticationToken(email, null, authorities);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
     }
+    
 }
