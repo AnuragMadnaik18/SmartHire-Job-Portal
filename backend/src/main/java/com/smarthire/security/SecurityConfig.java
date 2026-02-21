@@ -38,6 +38,23 @@ public class SecurityConfig {
                 		"/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html").permitAll()
+                // Company APIs
+                // Only RECRUITER can create
+                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                        "/api/company/**")
+                    .hasRole("RECRUITER")
+
+                // RECRUITER or ADMIN can delete
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE,
+                        "/api/company/**")
+                    .hasAnyRole("RECRUITER", "ADMIN")
+
+                // GET company - any logged in user
+                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                        "/api/company/**")
+                    .authenticated()
+                    
+                 // Everything else
                 .anyRequest().authenticated()
             )
             .sessionManagement(session ->
