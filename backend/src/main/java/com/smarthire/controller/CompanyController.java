@@ -1,0 +1,53 @@
+package com.smarthire.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.smarthire.dto.CompanyRequestDto;
+import com.smarthire.dto.CompanyResponseDto;
+import com.smarthire.service.CompanyService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+
+@RestController
+@RequestMapping("/api/company")
+@CrossOrigin("http://localhost:5173")
+@SecurityRequirement(name="bearerAuth")
+public class CompanyController {
+	@Autowired
+	private CompanyService companyService;
+	
+	 @PostMapping
+	 public ResponseEntity<CompanyResponseDto> createCompany(@RequestBody CompanyRequestDto dto) {
+	        CompanyResponseDto response = companyService.createCompany(dto);
+	        return ResponseEntity.ok(response);
+	 }
+
+	 @GetMapping
+	 public ResponseEntity<List<CompanyResponseDto>> getAllCompanies() {
+	        return ResponseEntity.ok(companyService.getAllCompanies());
+	 }
+	 
+	 
+	 @GetMapping("/{id}")
+	 public ResponseEntity<CompanyResponseDto> getCompanyById(@PathVariable Long id) {
+	        return ResponseEntity.ok(companyService.getCompanyById(id));
+	 }
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<String> deleteCompany(@PathVariable Long id) {
+		companyService.softDeleteCompany(id);
+	    return ResponseEntity.ok("Company deleted successfully");
+	}
+}
