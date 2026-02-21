@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.smarthire.custom_exceptions.CompanyNotFoundException;
+import com.smarthire.custom_exceptions.UnauthorizedActionException;
 import com.smarthire.dao.CompanyDao;
 import com.smarthire.dao.UserDao;
 import com.smarthire.dto.CompanyRequestDto;
@@ -56,7 +57,7 @@ public class CompanyServiceImpl implements CompanyService{
 		String email = authentication.getName();
 		User recruiter = userDao.findByEmail(email)
 				.orElseThrow(()-> new RuntimeException("User not found"));
-		return companyDao.findByRecruiterId(recruiter.getId())
+		return companyDao.findByRecruiterIdAndIsDeletedFalse(recruiter.getId())
 				.stream()
 				.map(this::mapToResponse)
 				.collect(Collectors.toList());
@@ -64,7 +65,7 @@ public class CompanyServiceImpl implements CompanyService{
 
 	@Override
 	public CompanyResponseDto getCompanyById(Long id) {
-		Company company = companyDao.findById(id)
+		Company company = companyDao.findByIdAndIsDeletedFalse(id)
 				.orElseThrow(()-> new CompanyNotFoundException("Company not found"));
 		return mapToResponse(company);
 	}
@@ -82,9 +83,17 @@ public class CompanyServiceImpl implements CompanyService{
 				User recruiter = userDao.findByEmail(email)
 						.orElseThrow(() -> new RuntimeException("User not found"));
 				
+//				Company company = companyDao
+//					    .findByIdAndRecruiterIdAndIsDeletedFalse(id, recruiter.getId())
+//					    .orElseThrow(() -> new RuntimeException("Not authorized"));
+				
 				Company company = companyDao
-					    .findByIdAndRecruiterId(id, recruiter.getId())
-					    .orElseThrow(() -> new RuntimeException("Not authorized"));
+				        .findByIdAndIsDeletedFalse(id)
+				        .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
+
+				if (!company.getRecruiter().getId().equals(recruiter.getId())) {
+				    throw new UnauthorizedActionException("You are not authorized to delete this company");
+				}
 				
 				// Check ownership
 				if(!company.getRecruiter().getId().equals(recruiter.getId())) {
