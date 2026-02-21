@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.smarthire.custom_exceptions.CompanyNotFoundException;
@@ -47,7 +49,14 @@ public class CompanyServiceImpl implements CompanyService{
 
 	@Override
 	public List<CompanyResponseDto> getAllCompanies() {
-		return companyDao.findAll()
+		
+		Authentication authentication = SecurityContextHolder
+				.getContext()
+				.getAuthentication();
+		String email = authentication.getName();
+		User recruiter = userDao.findByEmail(email)
+				.orElseThrow(()-> new RuntimeException("User not found"));
+		return companyDao.findByRecruiterId(recruiter.getId())
 				.stream()
 				.map(this::mapToResponse)
 				.collect(Collectors.toList());
@@ -62,11 +71,29 @@ public class CompanyServiceImpl implements CompanyService{
 
 	@Override
 	public void softDeleteCompany(Long id) {
-		Company company = companyDao.findById(id)
-                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
-
-        company.setDeleted(true); // if using soft delete
-        companyDao.save(company);
+		
+				// Get Logged-in recruiter email
+				Authentication authentication = SecurityContextHolder
+						.getContext()
+						.getAuthentication();
+				String email = authentication.getName();
+				
+				// Fetch Logged-in recruiter
+				User recruiter = userDao.findByEmail(email)
+						.orElseThrow(() -> new RuntimeException("User not found"));
+				
+				Company company = companyDao
+					    .findByIdAndRecruiterId(id, recruiter.getId())
+					    .orElseThrow(() -> new RuntimeException("Not authorized"));
+				
+				// Check ownership
+				if(!company.getRecruiter().getId().equals(recruiter.getId())) {
+					throw new RuntimeException("You are not authorized to delete this company");
+				}
+				
+				// Soft delete
+				company.setDeleted(true);
+				companyDao.save(company);
 	}
 	
 	private CompanyResponseDto mapToResponse(Company company) {
@@ -76,7 +103,11 @@ public class CompanyServiceImpl implements CompanyService{
 		dto.setDescription(company.getDescription());
 		dto.setWebsite(company.getWebsite());
 		dto.setLocation(company.getLocation());
-		dto.setRecruiterName(company.getRecruiter().getFullName());
+		
+		if (company.getRecruiter() != null) {
+	        dto.setRecruiterName(company.getRecruiter().getFullName());
+	        dto.setRecruiterId(company.getRecruiter().getId());  // 🔥 THIS LINE IS IMPORTANT
+	    }
 		return dto;
 	} 
 
