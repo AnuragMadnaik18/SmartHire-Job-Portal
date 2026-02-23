@@ -13,4 +13,5 @@ public class CompanyRequestDto {
 	private String website;
 	private String location;
 	private Long recruiterId;
+	private boolean deleted;
 }

@@ -126,3 +126,23 @@ th {
 .delete-btn:hover {
   background-color: #c0392b;
 }
+
+.restore-btn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.restore-btn:hover {
+    background-color: #1e8449;
+}
+
+.profile-name {
+  color: white;
+  font-weight: 600;
+  margin-right: 20px;
+}

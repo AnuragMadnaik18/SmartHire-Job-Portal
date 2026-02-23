@@ -43,3 +43,12 @@ export const deleteCompany = (id) => {
         getAuthHeader()
     );
 };
+
+// To restore the company
+export const restoreCompany = async (companyId) => {
+    return await axios.put(`${API_BASE_URL}/company/${companyId}/restore`, {}, {
+        headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`
+        }
+    });
+};

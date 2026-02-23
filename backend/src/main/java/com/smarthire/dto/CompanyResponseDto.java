@@ -15,4 +15,5 @@ public class CompanyResponseDto {
     private String location;
     private String recruiterName;
     private Long recruiterId;
+    private boolean deleted;
 }

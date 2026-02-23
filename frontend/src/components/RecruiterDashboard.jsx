@@ -3,16 +3,19 @@ import "../css/RecruiterDashboard.css"
 import { getAllCompanies } from "../services/recruiter";
 import { createCompany } from "../services/recruiter";
 import { deleteCompany } from "../services/recruiter";
+import { restoreCompany } from "../services/recruiter";
 
 const RecruiterDashboard = () => {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [companies, setCompanies] = useState([]);
+    const [showCompanyForm, setShowCompanyForm] = useState(false);
     const [companyForm, setCompanyForm] = useState({
         companyName: "",
         description: "",
         website: "",
         location: ""
     });
+    const user = JSON.parse(sessionStorage.getItem("user"));
 
     useEffect(() => {
         if (activeTab === "companies") {
@@ -40,7 +43,6 @@ const RecruiterDashboard = () => {
         e.preventDefault();
 
         try {
-            const user = JSON.parse(sessionStorage.getItem("user"));
 
             const payload = {
                 ...companyForm,
@@ -57,6 +59,8 @@ const RecruiterDashboard = () => {
                 website: "",
                 location: ""
             });
+            setShowCompanyForm(false);
+            fetchCompanies();
 
         } catch (error) {
             console.error("Error creating company:", error);
@@ -81,6 +85,17 @@ const RecruiterDashboard = () => {
         }
     };
 
+    const handleRestore = async (id) => {
+        try {
+            await restoreCompany(id);
+            alert("Company restored successfully");
+            fetchCompanies();   // reload list
+        } catch (error) {
+            console.error(error);
+            alert("Failed to restore company");
+        }
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case "dashboard":
@@ -99,11 +114,58 @@ const RecruiterDashboard = () => {
                 return (
                     <div>
                         <h2>My Companies</h2>
+                        <button className="create-company-btn"
+                            onClick={() => setShowCompanyForm(!showCompanyForm)}>
+                            {showCompanyForm ? "Close Form" : "+ Create Company"}
+                        </button>
+
+                        {showCompanyForm && (
+                            <form onSubmit={handleCompanySubmit} className="company-form">
+
+                                <input
+                                    type="text"
+                                    name="companyName"
+                                    placeholder="Company Name"
+                                    value={companyForm.companyName}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+
+                                <input
+                                    type="text"
+                                    name="location"
+                                    placeholder="Location"
+                                    value={companyForm.location}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+
+                                <input
+                                    type="text"
+                                    name="website"
+                                    placeholder="Website"
+                                    value={companyForm.website}
+                                    onChange={handleCompanyChange}
+                                />
+
+                                <textarea
+                                    name="description"
+                                    placeholder="Description"
+                                    value={companyForm.description}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+
+                                <button type="submit">Create Company</button>
+                            </form>
+                        )}
+
                         <table>
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Name</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -112,12 +174,21 @@ const RecruiterDashboard = () => {
                                         <td>{company.id}</td>
                                         <td>{company.companyName}</td>
                                         <td>
-                                            <button
-                                                className="delete-btn"
-                                                onClick={() => handleDelete(company.id)}
-                                            >
-                                                Delete
-                                            </button>
+                                            {company.deleted ? (
+                                                <button
+                                                    className="restore-btn"
+                                                    onClick={() => handleRestore(company.id)}
+                                                >
+                                                    Restore
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={() => handleDelete(company.id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -129,45 +200,9 @@ const RecruiterDashboard = () => {
             case "postJob":
                 return (
                     <div>
-                        <h2>Create Company</h2>
-
-                        <form onSubmit={handleCompanySubmit} className="company-form">
-                            <input
-                                type="text"
-                                name="companyName"
-                                placeholder="Company Name"
-                                value={companyForm.companyName}
-                                onChange={handleCompanyChange}
-                                required
-                            />
-
-                            <input
-                                type="text"
-                                name="location"
-                                placeholder="Location"
-                                value={companyForm.location}
-                                onChange={handleCompanyChange}
-                                required
-                            />
-
-                            <input
-                                type="text"
-                                name="website"
-                                placeholder="Website"
-                                value={companyForm.website}
-                                onChange={handleCompanyChange}
-                            />
-
-                            <textarea
-                                name="description"
-                                placeholder="Description"
-                                value={companyForm.description}
-                                onChange={handleCompanyChange}
-                                required
-                            />
-
-                            <button type="submit">Create Company</button>
-                        </form>
+                        <h2>Post Job</h2>
+                        <p>Select a company and create job vacancies here.</p>
+                        <p><b>Coming Soon...</b></p>
                     </div>
                 );
 
@@ -191,8 +226,11 @@ const RecruiterDashboard = () => {
             <div className="top-navbar">
                 <div className="logo">SmartHire</div>
                 <div className="navbar-right">
-                    <span>🔔</span>
-                    <span>👤</span>
+                    <span>
+                        <div className="profile-name">
+                            {user?.fullName}
+                        </div>
+                    </span>
                 </div>
             </div>
 

@@ -10,4 +10,5 @@ public interface CompanyService {
 	List<CompanyResponseDto> getAllCompanies();
 	CompanyResponseDto getCompanyById(Long id);
 	void softDeleteCompany(Long id);
+	void restoreCompany(Long companyId, Long recruiterId);
 }
