@@ -57,7 +57,7 @@ public class CompanyServiceImpl implements CompanyService{
 		String email = authentication.getName();
 		User recruiter = userDao.findByEmail(email)
 				.orElseThrow(()-> new RuntimeException("User not found"));
-		return companyDao.findByRecruiterIdAndIsDeletedFalse(recruiter.getId())
+		return companyDao.findByRecruiterId(recruiter.getId())
 				.stream()
 				.map(this::mapToResponse)
 				.collect(Collectors.toList());
@@ -82,10 +82,6 @@ public class CompanyServiceImpl implements CompanyService{
 				// Fetch Logged-in recruiter
 				User recruiter = userDao.findByEmail(email)
 						.orElseThrow(() -> new RuntimeException("User not found"));
-				
-//				Company company = companyDao
-//					    .findByIdAndRecruiterIdAndIsDeletedFalse(id, recruiter.getId())
-//					    .orElseThrow(() -> new RuntimeException("Not authorized"));
 				
 				Company company = companyDao
 				        .findByIdAndIsDeletedFalse(id)
@@ -112,12 +108,21 @@ public class CompanyServiceImpl implements CompanyService{
 		dto.setDescription(company.getDescription());
 		dto.setWebsite(company.getWebsite());
 		dto.setLocation(company.getLocation());
+		dto.setDeleted(company.isDeleted());
 		
 		if (company.getRecruiter() != null) {
 	        dto.setRecruiterName(company.getRecruiter().getFullName());
 	        dto.setRecruiterId(company.getRecruiter().getId());  // 🔥 THIS LINE IS IMPORTANT
 	    }
 		return dto;
+	}
+
+	@Override
+	public void restoreCompany(Long companyId, Long recruiterId) {
+		Company company = companyDao.findByIdAndRecruiterIdAndIsDeletedTrue(companyId, recruiterId)
+				.orElseThrow(()-> new CompanyNotFoundException("Company not found or not authorized."));
+		company.setDeleted(false);
+		companyDao.save(company);
 	} 
 
 }

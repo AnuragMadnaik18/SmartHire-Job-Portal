@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +30,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/company")
-@CrossOrigin("http://localhost:5173")
 @SecurityRequirement(name="bearerAuth")
 public class CompanyController {
 	@Autowired
@@ -63,4 +63,16 @@ public class CompanyController {
 		companyService.softDeleteCompany(id);
 	    return ResponseEntity.ok("Company deleted successfully");
 	}
+	
+	@PutMapping("/{id}/restore")
+    public ResponseEntity<String> restoreCompany(@PathVariable Long id,
+                                                 Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();  // your custom UserDetails
+        Long recruiterId = user.getId();
+
+        companyService.restoreCompany(id, recruiterId);
+
+        return ResponseEntity.ok("Company restored successfully");
+    }
 }

@@ -12,7 +12,6 @@ import com.smarthire.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin("http://localhost:5173")
 public class UserController {
 
     private final UserService userService;
