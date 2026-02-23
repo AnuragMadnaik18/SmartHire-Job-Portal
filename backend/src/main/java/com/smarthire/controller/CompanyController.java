@@ -29,7 +29,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/company")
-@CrossOrigin("http://localhost:5173")
 @SecurityRequirement(name="bearerAuth")
 public class CompanyController {
 	@Autowired
