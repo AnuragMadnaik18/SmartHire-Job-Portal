@@ -3,8 +3,10 @@ package com.smarthire.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.smarthire.dto.ChangePasswordRequestDto;
 import com.smarthire.dto.LoginRequestDto;
 import com.smarthire.dto.RegisterRequestDto;
+import com.smarthire.dto.UpdateProfileRequestDto;
 import com.smarthire.dto.UserResponseDto;
 import com.smarthire.entity.User;
 import com.smarthire.service.AuthService;
@@ -57,5 +59,17 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    
+    @PutMapping("/update-profile/{id}")
+    public ResponseEntity<String> updateProfile(@PathVariable Long id,@RequestBody UpdateProfileRequestDto dto){
+    	userService.updateProfile(id, dto);
+    	return ResponseEntity.ok("Profile updated successfully");
+    }
+    
+    @PutMapping("/change-password/{id}")
+    public ResponseEntity<String> changePassword(@PathVariable Long id,@RequestBody ChangePasswordRequestDto dto){
+    	userService.changePassword(id, dto);
+    	return ResponseEntity.ok("Password changed successfully");
     }
 }

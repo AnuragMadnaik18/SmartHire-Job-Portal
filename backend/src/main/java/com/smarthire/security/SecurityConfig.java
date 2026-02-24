@@ -55,6 +55,12 @@ public class SecurityConfig {
                         "/api/company/**")
                     .authenticated()
                     
+                 // 🔹 NEW: Profile APIs
+                    .requestMatchers(org.springframework.http.HttpMethod.PUT,
+                            "/api/users/update-profile/**",
+                            "/api/users/change-password/**")
+                        .authenticated()
+                    
                  // Everything else
                 .anyRequest().authenticated()
             )
