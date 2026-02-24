@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "../css/RecruiterDashboard.css"
-import { getAllCompanies } from "../services/recruiter";
-import { createCompany } from "../services/recruiter";
-import { deleteCompany } from "../services/recruiter";
-import { restoreCompany } from "../services/recruiter";
+import { getAllCompanies, createCompany, deleteCompany, restoreCompany } from "../services/recruiter";
+import { updateProfile , changePassword } from "../services/user";
 
 const RecruiterDashboard = () => {
+    const user = JSON.parse(sessionStorage.getItem("user"));
     const [activeTab, setActiveTab] = useState("dashboard");
     const [companies, setCompanies] = useState([]);
     const [showCompanyForm, setShowCompanyForm] = useState(false);
@@ -15,7 +14,17 @@ const RecruiterDashboard = () => {
         website: "",
         location: ""
     });
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const [profileForm, setProfileForm] = useState({
+        fullName: user?.fullName || "",
+        email: user?.email || "",
+        phoneNumber: user?.phoneNumber || ""
+    });
+
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: "",
+        newPassword: ""
+    });
+    
 
     useEffect(() => {
         if (activeTab === "companies") {
@@ -93,6 +102,55 @@ const RecruiterDashboard = () => {
         } catch (error) {
             console.error(error);
             alert("Failed to restore company");
+        }
+    };
+
+    const handleProfileChange = (e) => {
+        setProfileForm({
+            ...profileForm,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleProfileSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            await updateProfile(user.id, profileForm);
+
+            alert("Profile updated successfully");
+
+            sessionStorage.setItem("user", JSON.stringify({
+                ...user,
+                ...profileForm
+            }));
+
+        } catch (error) {
+            alert("Failed to update profile");
+        }
+    };
+
+    const handlePasswordChange = (e) => {
+        setPasswordForm({
+            ...passwordForm,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        console.log("Password form submitted");
+        try {
+            await changePassword(user.id, passwordForm);
+            alert("Password changed successfully");
+
+            setPasswordForm({
+                currentPassword: "",
+                newPassword: ""
+            });
+
+        } catch (error) {
+            alert("Incorrect current password");
         }
     };
 
@@ -213,7 +271,68 @@ const RecruiterDashboard = () => {
                 return <h2>Applications (Coming Soon)</h2>;
 
             case "settings":
-                return <h2>Settings (Coming Soon)</h2>;
+                return (
+                    <div>
+                        <h2>Settings</h2>
+
+                        <h3>Profile Information</h3>
+                        <form onSubmit={handleProfileSubmit} className="company-form">
+                            <input
+                                type="text"
+                                name="fullName"
+                                value={profileForm.fullName}
+                                onChange={handleProfileChange}
+                                placeholder="Full Name"
+                                required
+                            />
+
+                            <input
+                                type="email"
+                                name="email"
+                                value={profileForm.email}
+                                onChange={handleProfileChange}
+                                placeholder="Email"
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                name="phoneNumber"
+                                value={profileForm.phoneNumber}
+                                onChange={handleProfileChange}
+                                placeholder="Phone Number"
+                                required
+                            />
+
+                            <button type="submit">Update Profile</button>
+                        </form>
+
+                        <hr />
+
+                        <h3>Change Password</h3>
+                        <form onSubmit={handlePasswordSubmit} className="company-form">
+                            <input
+                                type="password"
+                                name="currentPassword"
+                                value={passwordForm.currentPassword}
+                                onChange={handlePasswordChange}
+                                placeholder="Current Password"
+                                required
+                            />
+
+                            <input
+                                type="password"
+                                name="newPassword"
+                                value={passwordForm.newPassword}
+                                onChange={handlePasswordChange}
+                                placeholder="New Password"
+                                required
+                            />
+
+                            <button type="submit">Change Password</button>
+                        </form>
+                    </div>
+                );
 
             default:
                 return <h2>Dashboard</h2>;
