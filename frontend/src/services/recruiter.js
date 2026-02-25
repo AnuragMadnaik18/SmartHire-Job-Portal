@@ -5,7 +5,7 @@ import API_BASE_URL from "./config";
 const getAuthHeader = () => {
     const token = sessionStorage.getItem("token");
     return {
-        headers : {
+        headers: {
             Authorization: `Bearer ${token}`,
         },
     }
@@ -52,3 +52,36 @@ export const restoreCompany = async (companyId) => {
         }
     });
 };
+
+// To Post the job
+export const postJob = (jobData) => {
+    return axios.post(`${API_BASE_URL}/jobs/create`,
+        jobData,
+        getAuthHeader()
+    )
+}
+
+
+// To count total jobs posted by recruiter
+export const getTotalJobs = () => {
+    return axios.get(`${API_BASE_URL}/jobs/count`,
+        getAuthHeader()
+    )
+}
+
+// To get all the jobs posted for a company
+export const getJobsByCompany = (companyId) => {
+    return axios.get(
+        `${API_BASE_URL}/jobs/company/${companyId}`,
+        getAuthHeader()
+    );
+};
+
+// To toggle job status
+export const toggleJobStatus = (jobId) => {
+    return axios.put(`${API_BASE_URL}/jobs/toggleStatus/${jobId}`,
+        {},
+        getAuthHeader(),
+    )
+}
+

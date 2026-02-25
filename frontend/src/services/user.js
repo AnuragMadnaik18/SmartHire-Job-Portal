@@ -33,4 +33,4 @@ export const changePassword = (id,data) => {
     return axios.put(`${API_BASE_URL}/users/change-password/${id}`,data,
         getAuthHeader()
     );
-}
+}   
