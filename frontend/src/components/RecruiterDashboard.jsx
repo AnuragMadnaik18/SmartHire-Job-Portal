@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from "react";
 import "../css/RecruiterDashboard.css"
 import { getAllCompanies, createCompany, deleteCompany, restoreCompany } from "../services/recruiter";
-import { updateProfile , changePassword } from "../services/user";
+import { postJob, getTotalJobs, getJobsByCompany, toggleJobStatus } from "../services/recruiter";
+import { updateProfile, changePassword } from "../services/user";
 
 const RecruiterDashboard = () => {
     const user = JSON.parse(sessionStorage.getItem("user"));
+
     const [activeTab, setActiveTab] = useState("dashboard");
+
     const [companies, setCompanies] = useState([]);
     const [showCompanyForm, setShowCompanyForm] = useState(false);
+    const [selectedCompany, setSelectedCompany] = useState(null);
+    
+    const [totalJobs, setTotalJobs] = useState(0);
+    const [jobs, setJobs] = useState([]);
+
     const [companyForm, setCompanyForm] = useState({
         companyName: "",
         description: "",
         website: "",
         location: ""
     });
+
     const [profileForm, setProfileForm] = useState({
         fullName: user?.fullName || "",
         email: user?.email || "",
@@ -24,10 +33,26 @@ const RecruiterDashboard = () => {
         currentPassword: "",
         newPassword: ""
     });
-    
+
+    const [jobData, setJobData] = useState({
+        title: "",
+        description: "",
+        salary: "",
+        location: "",
+        experience: "",
+        jobType: "",
+        companyId: ""
+    });
+
 
     useEffect(() => {
-        if (activeTab === "companies") {
+
+        if (activeTab === "dashboard") {
+            fetchTotalJobs();
+            fetchCompanies();
+        }
+
+        if (activeTab === "companies" || activeTab == "postJob") {
             fetchCompanies();
         }
     }, [activeTab]);
@@ -154,6 +179,52 @@ const RecruiterDashboard = () => {
         }
     };
 
+    const handlePostChange = (e) => {
+        setJobData({
+            ...jobData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handlePostSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await postJob(jobData);
+            alert("Job Posted Successfully.");
+            setJobData({
+                title: "",
+                description: "",
+                salary: "",
+                location: "",
+                experience: "",
+                jobType: "",
+                companyId: ""
+            });
+        } catch (error) {
+            console.log(error);
+            alert("Error posting job!");
+        }
+    }
+
+    const handleCompanyClick = async (company) => {
+        try {
+            setSelectedCompany(company);
+            const response = await getJobsByCompany(company.id);
+            setJobs(response.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchTotalJobs = async () => {
+        try {
+            const response = await getTotalJobs(); // we will create this service
+            setTotalJobs(response.data);
+        } catch (error) {
+            console.error("Error fetching total jobs:", error);
+        }
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case "dashboard":
@@ -162,7 +233,7 @@ const RecruiterDashboard = () => {
                         <h2>Dashboard Overview</h2>
                         <div className="card-container">
                             <div className="card">Total Companies: {companies.length}</div>
-                            <div className="card">Total Jobs: 0</div>
+                            <div className="card">Total Jobs: {totalJobs}</div>
                             <div className="card">Applications: 0</div>
                         </div>
                     </div>
@@ -230,7 +301,12 @@ const RecruiterDashboard = () => {
                                 {companies.map((company) => (
                                     <tr key={company.id}>
                                         <td>{company.id}</td>
-                                        <td>{company.companyName}</td>
+                                        <td
+                                            style={{ cursor: "pointer", color: "blue" }}
+                                            onClick={() => handleCompanyClick(company)}
+                                        >
+                                            {company.companyName}
+                                        </td>
                                         <td>
                                             {company.deleted ? (
                                                 <button
@@ -252,20 +328,153 @@ const RecruiterDashboard = () => {
                                 ))}
                             </tbody>
                         </table>
+                        {selectedCompany && (
+                            <div style={{ marginTop: "30px" }}>
+                                <h3>
+                                    Jobs at {selectedCompany.companyName}
+                                </h3>
+
+                                {jobs.length === 0 ? (
+                                    <p>No jobs posted for this company.</p>
+                                ) : (
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Title</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {jobs.map(job => (
+                                                <tr key={job.id}>
+                                                    <td>{job.id}</td>
+                                                    <td>{job.title}</td>
+                                                    <td>{job.status}</td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleJobStatus(job.id)
+                                                                    .then(() =>
+                                                                        handleCompanyClick(selectedCompany)
+                                                                    )
+                                                            }
+                                                        >
+                                                            {job.status === "OPEN"
+                                                                ? "Close Job"
+                                                                : "Reopen Job"}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        )}
                     </div>
                 );
 
             case "postJob":
                 return (
-                    <div>
-                        <h2>Post Job</h2>
-                        <p>Select a company and create job vacancies here.</p>
-                        <p><b>Coming Soon...</b></p>
+                    <div className="job-form-container">
+                        <h2>Post New Job</h2>
+
+                        <form onSubmit={handlePostSubmit} className="job-form">
+
+                            <div className="form-group">
+                                <label>Job Title</label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    onChange={handlePostChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Job Description</label>
+                                <textarea
+                                    name="description"
+                                    onChange={handlePostChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Salary</label>
+                                    <input
+                                        type="number"
+                                        name="salary"
+                                        onChange={handlePostChange}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Location</label>
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        onChange={handlePostChange}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Experience</label>
+                                    <select name="experience" onChange={handlePostChange} required>
+                                        <option value="">Select Experience</option>
+                                        <option value="FRESHER">FRESHER</option>
+                                        <option value="ZERO_TO_TWO">0 - 2</option>
+                                        <option value="TWO_TO_FOUR">2 - 4</option>
+                                        <option value="TWO_TO_FOUR">2 - 4</option>
+                                        <option value="FOUR_TO_SIX">4 - 6</option>
+                                        <option value="SIX_TO_EIGHT">6 - 8</option>
+                                        <option value="EIGHT_PLUS">8+</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Job Type</label>
+                                    <select name="jobType" onChange={handlePostChange} required>
+                                        <option value="">Select Job Type</option>
+                                        <option value="FULLTIME">FULLTIME</option>
+                                        <option value="PARTTIME">PARTTIME</option>
+                                        <option value="INTERNSHIP">INTERNSHIP</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Select Company</label>
+                                <select
+                                    name="companyId"
+                                    value={jobData.companyId}
+                                    onChange={handlePostChange}
+                                    required
+                                >
+                                    <option value="">Select Company</option>
+
+                                    {companies.map((company) => (
+                                        <option key={company.id} value={company.id}>
+                                            {company.companyName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <button type="submit" className="submit-btn">
+                                Post Job
+                            </button>
+
+                        </form>
                     </div>
                 );
-
-            case "jobs":
-                return <h2>My Jobs (Coming Soon)</h2>;
 
             case "applications":
                 return <h2>Applications (Coming Soon)</h2>;
@@ -360,7 +569,6 @@ const RecruiterDashboard = () => {
                         <li onClick={() => setActiveTab("dashboard")}>Dashboard</li>
                         <li onClick={() => setActiveTab("companies")}>My Companies</li>
                         <li onClick={() => setActiveTab("postJob")}>Post Job</li>
-                        <li onClick={() => setActiveTab("jobs")}>My Jobs</li>
                         <li onClick={() => setActiveTab("applications")}>Applications</li>
                         <li onClick={() => setActiveTab("settings")}>Settings</li>
                         <li onClick={() => {
