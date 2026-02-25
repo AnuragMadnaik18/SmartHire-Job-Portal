@@ -60,6 +60,20 @@ public class SecurityConfig {
                             "/api/users/update-profile/**",
                             "/api/users/change-password/**")
                         .authenticated()
+                        
+                 // 🔹 Job APIs
+
+                     .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/jobs/**")
+                            .hasRole("RECRUITER")
+
+                     .requestMatchers(org.springframework.http.HttpMethod.PUT,
+                                "/api/jobs/**")
+                            .hasRole("RECRUITER")
+
+                     .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/jobs/**")
+                            .authenticated()
                     
                  // Everything else
                 .anyRequest().authenticated()
