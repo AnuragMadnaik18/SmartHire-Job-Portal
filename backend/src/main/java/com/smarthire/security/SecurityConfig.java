@@ -1,5 +1,7 @@
 package com.smarthire.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @EnableWebSecurity
 @Configuration
@@ -41,42 +44,29 @@ public class SecurityConfig {
                         "/swagger-ui.html").permitAll()
                 // Company APIs
                 // Only RECRUITER can create
-                .requestMatchers(org.springframework.http.HttpMethod.POST,
-                        "/api/company/**")
-                    .hasRole("RECRUITER")
-
+                	.requestMatchers(HttpMethod.POST,"/api/company/**").hasRole("RECRUITER")
                 // RECRUITER or ADMIN can delete
-                .requestMatchers(org.springframework.http.HttpMethod.DELETE,
-                        "/api/company/**")
-                    .hasAnyRole("RECRUITER", "ADMIN")
-
+                	.requestMatchers(HttpMethod.DELETE,"/api/company/**").hasAnyRole("RECRUITER", "ADMIN")
                 // GET company - any logged in user
-                .requestMatchers(org.springframework.http.HttpMethod.GET,
-                        "/api/company/**")
-                    .authenticated()
+                	.requestMatchers(HttpMethod.GET,"/api/company/**").authenticated()
+     
                     
                  // 🔹 NEW: Profile APIs
-                    .requestMatchers(org.springframework.http.HttpMethod.PUT,
-                            "/api/users/update-profile/**",
-                            "/api/users/change-password/**")
-                        .authenticated()
+                    .requestMatchers(HttpMethod.PUT,"/api/users/update-profile/**","/api/users/change-password/**").authenticated()
                         
                  // 🔹 Job APIs
-
-                     .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                "/api/jobs/**")
-                            .hasRole("RECRUITER")
-
-                     .requestMatchers(org.springframework.http.HttpMethod.PUT,
-                                "/api/jobs/**")
-                            .hasRole("RECRUITER")
-
-                     .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/jobs/**")
-                            .authenticated()
-                    
+                     .requestMatchers(HttpMethod.POST,"/api/jobs/**").hasRole("RECRUITER")
+                     .requestMatchers(HttpMethod.PUT,"/api/jobs/**").hasRole("RECRUITER")
+                     .requestMatchers(HttpMethod.GET,"/api/jobs/**").authenticated()
+                     
+                  // 🔹 Application APIs
+                     .requestMatchers(HttpMethod.POST,"/api/applications/apply").hasRole("JOBSEEKER")
+                     .requestMatchers(HttpMethod.GET, "/api/applications/job/**").hasRole("RECRUITER")
+                     .requestMatchers(HttpMethod.GET, "/api/applications/my").hasRole("JOBSEEKER")
+                     .requestMatchers(HttpMethod.PUT, "/api/applications/status/**").hasRole("RECRUITER")
+ 
                  // Everything else
-                .anyRequest().authenticated()
+                     .anyRequest().authenticated()
             )
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -92,9 +82,9 @@ public class SecurityConfig {
         org.springframework.web.cors.CorsConfiguration configuration =
                 new org.springframework.web.cors.CorsConfiguration();
 
-        configuration.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
