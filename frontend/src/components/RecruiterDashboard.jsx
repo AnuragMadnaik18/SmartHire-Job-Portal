@@ -3,6 +3,7 @@ import "../css/RecruiterDashboard.css"
 import { getAllCompanies, createCompany, deleteCompany, restoreCompany } from "../services/recruiter";
 import { postJob, getTotalJobs, getJobsByCompany, toggleJobStatus } from "../services/recruiter";
 import { updateProfile, changePassword } from "../services/user";
+import { getApplicationsByJob, updateApplicationStatus } from "../services/application";
 
 const RecruiterDashboard = () => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -12,9 +13,14 @@ const RecruiterDashboard = () => {
     const [companies, setCompanies] = useState([]);
     const [showCompanyForm, setShowCompanyForm] = useState(false);
     const [selectedCompany, setSelectedCompany] = useState(null);
-    
+
     const [totalJobs, setTotalJobs] = useState(0);
     const [jobs, setJobs] = useState([]);
+    const [selectedJob, setSelectedJob] = useState([]);
+
+    const [jobId, setJobId] = useState("");
+    const [applications, setApplications] = useState([]);
+
 
     const [companyForm, setCompanyForm] = useState({
         companyName: "",
@@ -55,7 +61,19 @@ const RecruiterDashboard = () => {
         if (activeTab === "companies" || activeTab == "postJob") {
             fetchCompanies();
         }
+
+        if (activeTab === "applications") {
+            getAllCompanies()
+                .then(res => setCompanies(res.data))
+                .catch(err => console.error(err));
+        }
     }, [activeTab]);
+
+    useEffect(() => {
+        getAllCompanies()
+            .then(res => setCompanies(res.data))
+            .catch(err => console.error(err));
+    }, []);
 
     const fetchCompanies = async () => {
         try {
@@ -63,6 +81,17 @@ const RecruiterDashboard = () => {
             setCompanies(response.data);
         } catch (error) {
             console.error("Error fetching companies:", error);
+        }
+    };
+
+    const fetchApplications = async () => {
+        if (!jobId) return;
+        try {
+            const response = await getApplicationsByJob(jobId);
+            setApplications(response.data);
+        } catch (error) {
+            console.error("Error fetching applications", error);
+            alert("Unable to fetch applications");
         }
     };
 
@@ -209,10 +238,42 @@ const RecruiterDashboard = () => {
     const handleCompanyClick = async (company) => {
         try {
             setSelectedCompany(company);
+            setSelectedJob(null);
+            setApplications([]);
+
+            getJobsByCompany(company.id)
+                .then(res => setJobs(res.data))
+                .catch(err => console.error(err));
+
             const response = await getJobsByCompany(company.id);
             setJobs(response.data);
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const handleJobClick = (job) => {
+        setSelectedJob(job);
+        getApplicationsByJob(job.id)
+            .then(res => setApplications(res.data))
+            .catch(err => console.log(err));
+    }
+
+    const handleApplicationStatusChange = async (applicationId, status) => {
+        try {
+            await updateApplicationStatus(applicationId, status);
+
+            alert("Status Updated Successfully");
+
+            // 🔥 Re-fetch applications for currently selected job
+            if (selectedJob) {
+                const res = await getApplicationsByJob(selectedJob.id);
+                setApplications(res.data);
+            }
+
+        } catch (error) {
+            console.log(error.response);
+            alert(error.response?.data || "Failed to update status");
         }
     };
 
@@ -222,6 +283,23 @@ const RecruiterDashboard = () => {
             setTotalJobs(response.data);
         } catch (error) {
             console.error("Error fetching total jobs:", error);
+        }
+    };
+
+    const getAvailableStatuses = (currentStatus) => {
+        switch (currentStatus) {
+            case "APPLIED":
+                return ["SHORTLISTED", "REJECTED"];
+
+            case "SHORTLISTED":
+                return ["SELECTED", "REJECTED"];
+
+            case "SELECTED":
+            case "REJECTED":
+                return []; // Locked
+
+            default:
+                return [];
         }
     };
 
@@ -477,7 +555,106 @@ const RecruiterDashboard = () => {
                 );
 
             case "applications":
-                return <h2>Applications (Coming Soon)</h2>;
+                return (
+                    <div className="applications-container">
+                        <h2>Applications Management</h2>
+
+                        <div className="applications-layout">
+
+                            {/* LEFT SIDE - Companies */}
+                            <div className="companies-panel">
+                                <h4>Companies</h4>
+                                {companies.map((company) => (
+                                    <div
+                                        key={company.id}
+                                        className={`company-item ${selectedCompany?.id === company.id ? "active" : ""}`}
+                                        onClick={() => handleCompanyClick(company)}
+                                    >
+                                        {company.companyName}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* MIDDLE - Jobs */}
+                            <div className="jobs-panel">
+                                {selectedCompany && (
+                                    <>
+                                        <h4>Jobs</h4>
+                                        {jobs.length === 0 ? (
+                                            <p>No jobs found</p>
+                                        ) : (
+                                            jobs.map((job) => (
+                                                <div
+                                                    key={job.id}
+                                                    className={`job-item ${selectedJob?.id === job.id ? "active" : ""}`}
+                                                    onClick={() => handleJobClick(job)}
+                                                >
+                                                    {job.title}
+                                                </div>
+                                            ))
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            {/* RIGHT - Applications */}
+                            <div className="applications-panel">
+                                {selectedJob && (
+                                    <>
+                                        <h4>Applicants for: {selectedJob.title}</h4>
+
+                                        {applications.length === 0 ? (
+                                            <p>No applications yet.</p>
+                                        ) : (
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Application ID</th>
+                                                        <th>Job Seeker</th>
+                                                        <th>Status</th>
+                                                        <th>Update</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {applications.map((app) => (
+                                                        <tr key={app.id}>
+                                                            <td>{app.id}</td>
+                                                            <td>{app.applicantName}</td>
+                                                            <td>{app.applicationStatus}</td>
+                                                            <td>
+                                                                {getAvailableStatuses(app.applicationStatus).length === 0 ? (
+                                                                    <span style={{ color: "gray", fontWeight: "bold" }}>
+                                                                        Final Status – Cannot Change
+                                                                    </span>
+                                                                ) : (
+                                                                    <select
+                                                                        onChange={(e) =>
+                                                                            handleApplicationStatusChange(app.id, e.target.value)
+                                                                        }
+                                                                        defaultValue=""
+                                                                    >
+                                                                        <option value="" disabled>
+                                                                            Change Status
+                                                                        </option>
+                                                                        {getAvailableStatuses(app.applicationStatus).map((status) => (
+                                                                            <option key={status} value={status}>
+                                                                                {status}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
 
             case "settings":
                 return (
