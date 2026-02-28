@@ -1,6 +1,5 @@
 package com.smarthire.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,13 +113,47 @@ public class ApplicationServiceImpl implements ApplicationService{
 
 	@Override
 	public ApplicationResponseDto updateStatus(Long applicantId, String status) {
-		Application app = applicationDao.findById(applicantId)
-                .orElseThrow(() -> new ApplicationException("Application not found"));
+//		Application app = applicationDao.findById(applicantId)
+//                .orElseThrow(() -> new ApplicationException("Application not found"));
+//
+//        app.setApplicationStatus(ApplicationStatus.valueOf(status));
+//        applicationDao.save(app);
+		
+		Application application = applicationDao.findById(applicantId)
+	            .orElseThrow(() -> new ApplicationException("Application not found"));
 
-        app.setApplicationStatus(ApplicationStatus.valueOf(status));
-        applicationDao.save(app);
+	    ApplicationStatus currentStatus = application.getApplicationStatus();
+	    ApplicationStatus newStatus = ApplicationStatus.valueOf(status);
 
-        return mapToDto(app);
+	    // 🔥 Status transition rules
+	    switch (currentStatus) {
+
+	        case APPLIED:
+	            if (newStatus != ApplicationStatus.SHORTLISTED &&
+	                newStatus != ApplicationStatus.REJECTED) {
+	                throw new ApplicationException("Invalid status transition from APPLIED");
+	            }
+	            break;
+
+	        case SHORTLISTED:
+	            if (newStatus != ApplicationStatus.SELECTED &&
+	                newStatus != ApplicationStatus.REJECTED) {
+	                throw new ApplicationException("Invalid status transition from SHORTLISTED");
+	            }
+	            break;
+
+	        case SELECTED:
+	        case REJECTED:
+	            throw new ApplicationException("Final status cannot be changed");
+
+	        default:
+	            throw new ApplicationException("Invalid status update");
+	    }
+
+	    application.setApplicationStatus(newStatus);
+	    applicationDao.save(application);
+
+        return mapToDto(application);
 	}
 	
 	private ApplicationResponseDto mapToDto(Application app) {
@@ -128,6 +161,7 @@ public class ApplicationServiceImpl implements ApplicationService{
                 app.getId(),
                 app.getJob().getId(),
                 app.getApplicant().getId(),
+                app.getApplicant().getFullName(),
                 app.getResumePath(),
                 app.getCoverLetter(),
                 app.getApplicationStatus().name(),

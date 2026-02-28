@@ -13,6 +13,7 @@ public class ApplicationResponseDto {
 	private Long id;
 	private Long jobId;
 	private Long applicantId;
+	private String applicantName;
 	private String resumePath;
 	private String coverLetter;
 	private String applicationStatus;
