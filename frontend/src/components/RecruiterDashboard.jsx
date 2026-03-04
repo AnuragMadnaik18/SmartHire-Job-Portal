@@ -18,7 +18,6 @@ const RecruiterDashboard = () => {
     const [jobs, setJobs] = useState([]);
     const [selectedJob, setSelectedJob] = useState([]);
 
-    const [jobId, setJobId] = useState("");
     const [applications, setApplications] = useState([]);
 
 
@@ -84,16 +83,6 @@ const RecruiterDashboard = () => {
         }
     };
 
-    const fetchApplications = async () => {
-        if (!jobId) return;
-        try {
-            const response = await getApplicationsByJob(jobId);
-            setApplications(response.data);
-        } catch (error) {
-            console.error("Error fetching applications", error);
-            alert("Unable to fetch applications");
-        }
-    };
 
     const handleCompanyChange = (e) => {
         setCompanyForm({
@@ -509,7 +498,6 @@ const RecruiterDashboard = () => {
                                         <option value="">Select Experience</option>
                                         <option value="FRESHER">FRESHER</option>
                                         <option value="ZERO_TO_TWO">0 - 2</option>
-                                        <option value="TWO_TO_FOUR">2 - 4</option>
                                         <option value="TWO_TO_FOUR">2 - 4</option>
                                         <option value="FOUR_TO_SIX">4 - 6</option>
                                         <option value="SIX_TO_EIGHT">6 - 8</option>

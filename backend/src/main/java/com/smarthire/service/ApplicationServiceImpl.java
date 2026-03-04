@@ -160,6 +160,8 @@ public class ApplicationServiceImpl implements ApplicationService{
         return new ApplicationResponseDto(
                 app.getId(),
                 app.getJob().getId(),
+                app.getJob().getTitle(),
+                app.getJob().getCompany().getCompanyName(),
                 app.getApplicant().getId(),
                 app.getApplicant().getFullName(),
                 app.getResumePath(),

@@ -25,3 +25,17 @@ export const updateApplicationStatus = (applicationId,status) => {
         getAuthHeader()
     )
 }
+
+// Get Logged-in user's applications
+export const getMyApplications = () => {
+    return axios.get(`${API_BASE_URL}/applications/my`,
+        getAuthHeader()
+    )
+}
+
+// Apply to Job
+export const applyToJob = (jobId) => {
+    return axios.post(`${API_BASE_URL}/applications/apply`,
+        getAuthHeader()
+    )
+}

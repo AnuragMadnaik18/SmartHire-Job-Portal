@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class ApplicationResponseDto {
 	private Long id;
 	private Long jobId;
+	private String jobTitle;
+	private String companyName;
 	private Long applicantId;
 	private String applicantName;
 	private String resumePath;
