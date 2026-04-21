@@ -7,13 +7,15 @@ public class LoginResponseDto {
 	private String fullName;
 	private String email;
 	private String role;
+	private String phoneNumber;
 	
-	public LoginResponseDto(String token,Long id,String fullname,String email,String role) {
+	public LoginResponseDto(String token,Long id,String fullname,String email,String role,String phoneNumber) {
 		this.token = token;
 		this.id= id ;
 		this.fullName = fullname;
 		this.email= email;
 		this.role=role;
+		this.phoneNumber = phoneNumber;
 	}
 	
 	public String getToken() {return token;}
@@ -22,4 +24,5 @@ public class LoginResponseDto {
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
     public String getRole() { return role; }
+    public String getPhoneNumber() {return phoneNumber;}
 }	
