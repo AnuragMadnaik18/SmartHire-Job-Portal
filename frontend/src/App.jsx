@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login'
 import Register from './components/Register'
 import RecruiterDashboard from './components/RecruiterDashboard';
+import JobSeekerDashboard from './components/JobSeekerDashboard';
 
 
 // Function to get Logged in user
@@ -42,6 +43,16 @@ function App() {
           element={
             <ProtectedRoute allowedRole="RECRUITER">
               <RecruiterDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* JobSeekerDashboard Dashboard */}
+        <Route
+          path="/jobseeker"
+          element={
+            <ProtectedRoute allowedRole="JOBSEEKER">
+              <JobSeekerDashboard />
             </ProtectedRoute>
           }
         />
