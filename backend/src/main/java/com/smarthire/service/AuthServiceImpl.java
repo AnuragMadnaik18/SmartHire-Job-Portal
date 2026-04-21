@@ -33,14 +33,15 @@ public class AuthServiceImpl implements AuthService {
 
         User user = (User) authentication.getPrincipal();
         String token = jwtUtil.createToken(authentication);
+        System.out.println("Phone Number: " + user.getPhoneNumber());
         
         return new LoginResponseDto(
         		token, 
         		user.getId(), 
         		user.getFullName(),
         		user.getEmail(),
-        		user.getRole().name());
-        		
+        		user.getRole().name(),
+        		user.getPhoneNumber());
     }
 }
 
